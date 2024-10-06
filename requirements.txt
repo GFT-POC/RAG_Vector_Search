@@ -1,0 +1,7 @@
+streamlit
+pdfplumber
+transformers
+torch
+pinecone-client
+groq
+unicodedata
