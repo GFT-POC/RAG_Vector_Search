@@ -24,7 +24,7 @@ client = Groq(api_key=API_KEY)
 
 # Initialize Pinecone client using the new API
 try:
-    pc = Pinecone(api_key=PINECONE_API_KEY)
+    pc = pinecone(api_key=PINECONE_API_KEY)
     #st.write("Pinecone initialized successfully.")
 except Exception as e:
     st.error(f"Error initializing Pinecone: {e}")
