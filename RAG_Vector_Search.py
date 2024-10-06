@@ -3,30 +3,30 @@ import pdfplumber
 import os
 from groq import Groq
 from transformers import AutoModel, AutoTokenizer
-import pinecone
-import time
+from pinecone import Pinecone, ServerlessSpec
 import unicodedata
+
+from transformers import AutoModel
 
 # Load API keys securely from environment variables (You should set these environment variables securely)
 API_KEY = "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"
 PINECONE_API_KEY = "2877c19f-9191-4257-8d04-c149c8edb028"
-PINECONE_ENV = "us-east1-gcp"
+PINECONE_ENV = os.getenv("PINECONE_ENV", "us-east1-gcp")
 
 if not API_KEY or not PINECONE_API_KEY:
     st.error("API keys are missing. Please set the GROQ_API_KEY and PINECONE_API_KEY environment variables.")
     st.stop()
 
-# Initialize the Pinecone client
+# Initialize Groq client
+client = Groq(api_key=API_KEY)
+
+# Initialize Pinecone client using the new API
 try:
-    pinecone.init(api_key=PINECONE_API_KEY, environment=PINECONE_ENV)
-    st.write("Pinecone initialized successfully.")
+    pc = Pinecone(api_key=PINECONE_API_KEY)
+    #st.write("Pinecone initialized successfully.")
 except Exception as e:
     st.error(f"Error initializing Pinecone: {e}")
     st.stop()
-
-# Initialize Groq client and Pinecone
-client = Groq(api_key=API_KEY)
-pinecone = Pinecone(api_key=PINECONE_API_KEY)
 
 # Load embedding model for RAG
 embedding_model = AutoModel.from_pretrained('jinaai/jina-embeddings-v2-base-en', trust_remote_code=True)
@@ -45,7 +45,7 @@ if 'selected_vector_store' not in st.session_state:
 st.header("Select or Create Vector Store")
 
 # Get a list of existing vector stores
-existing_indexes = pinecone.list_indexes().names()
+existing_indexes = pc.list_indexes().names()
 
 # Initialize a placeholder for `index_name`
 index_name = None
@@ -65,12 +65,12 @@ if vector_store_choice == "Create New":
     if new_vector_store_name:
         index_name = new_vector_store_name
         # Create a new index with the correct dimension (768 in this case)
-        if index_name not in pinecone.list_indexes().names():
-            pinecone.create_index(
+        if index_name not in pc.list_indexes().names():
+            pc.create_index(
                 name=index_name,
                 dimension=768,  # Ensure this matches your embedding model's dimension
                 metric='cosine',
-                spec=ServerlessSpec(cloud='aws', region='us-east-1')
+                spec=ServerlessSpec(cloud='aws', region='us-east1')
             )
             st.success(f"New vector store '{index_name}' created.")
 else:
@@ -85,7 +85,11 @@ if st.session_state.selected_vector_store != vector_store_choice:
 
 # Ensure that index_name is defined before creating the index
 if index_name:
-    index = pinecone.Index(index_name)
+    try:
+        index = pc.Index(index_name)
+    except Exception as e:
+        st.error(f"Error connecting to Pinecone index: {e}")
+        st.stop()
 else:
     st.error("Please select or create a vector store before uploading files.")
     st.stop()
@@ -169,35 +173,21 @@ def call_groq(user_query, context, search_type):
             such as skills, experience, education, certifications, or specific project accomplishments \
             that align with the user requirements.\
             
-            Make sure to format your response as follows:\
-
             Candidate Name: [Name]\
             Explanation: [A brief explanation of how the candidate fulfills the query requirements]\
             
-            If a candidate does not fully match the criteria, still include their name but explain why \
-            they are only a partial match or what qualifications they are missing.\
-            
-            Important note about the output:\
-            - Do not mention the concept of pinecone, user query, chunks, vector search, vector store in your answer.\
-            - Do not refer to the chunks passed as context and do not mention the user query in your answer.\
-            - Format the output to be easy to read.\
-
             Here's the information to analyze:\
 
             Chunks: {context}\
-
-            User question passed to the vector search: {user_query}\
+            User question: {user_query}\
         """
     else:
         system_prompt = f"""
         Instructions:\
         - You are performing a general search. Be helpful and answer questions concisely.\
         - Use the provided file names and text chunks to answer the question accurately.\
-        - The context was retrieved from a pinecone vector store made of chunks so the format might not provide complete sentences all the time.\
-        - Do not mention the concept of pinecone, chunks, vector search, vector store in your answer.\
-        
         Context: {context}\
-        User question passed to the vector search: {user_query}\
+        User question: {user_query}\
         """
     
     try:
@@ -311,7 +301,6 @@ if user_query:
     context = query_database(user_query)
     if context:
         response = call_groq(user_query, context, search_type)
-        #st.write(context)
         st.write(response)
     else:
         st.warning("No relevant context found for the query.")
