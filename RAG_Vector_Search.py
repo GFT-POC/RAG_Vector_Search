@@ -5,7 +5,7 @@ from groq import Groq
 from transformers import AutoModel, AutoTokenizer
 #from pinecone import Pinecone, ServerlessSpec
 import pinecone
-from pinecone import ServerlessSpec
+#from pinecone import ServerlessSpec
 import unicodedata
 
 from transformers import AutoModel
