@@ -3,7 +3,7 @@ import pdfplumber
 import os
 from groq import Groq
 from transformers import AutoModel, AutoTokenizer
-from pinecone import Pinecone, ServerlessSpec, Index
+import pinecone
 import time
 import unicodedata
 
