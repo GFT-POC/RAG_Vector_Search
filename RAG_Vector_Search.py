@@ -10,9 +10,18 @@ import unicodedata
 # Load API keys securely from environment variables (You should set these environment variables securely)
 API_KEY = "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"
 PINECONE_API_KEY = "2877c19f-9191-4257-8d04-c149c8edb028"
+PINECONE_ENV = "us-east1-gcp"
 
 if not API_KEY or not PINECONE_API_KEY:
     st.error("API keys are missing. Please set the GROQ_API_KEY and PINECONE_API_KEY environment variables.")
+    st.stop()
+
+# Initialize the Pinecone client
+try:
+    pinecone.init(api_key=PINECONE_API_KEY, environment=PINECONE_ENV)
+    st.write("Pinecone initialized successfully.")
+except Exception as e:
+    st.error(f"Error initializing Pinecone: {e}")
     st.stop()
 
 # Initialize Groq client and Pinecone
