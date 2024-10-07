@@ -3,8 +3,8 @@ import pdfplumber
 import os
 from groq import Groq
 from transformers import AutoModel, AutoTokenizer
-#from pinecone import Pinecone, ServerlessSpec
-import pinecone
+from pinecone import Pinecone, ServerlessSpec
+#import pinecone
 #from pinecone import ServerlessSpec
 import unicodedata
 
@@ -24,8 +24,8 @@ client = Groq(api_key=API_KEY)
 
 # Initialize Pinecone client using the new API
 try:
-    pc = pinecone.init(api_key=PINECONE_API_KEY, environment=PINECONE_ENV)
-    #pc = pinecone(api_key=PINECONE_API_KEY)
+    #pc = pinecone.init(api_key=PINECONE_API_KEY, environment=PINECONE_ENV)
+    pc = pinecone(api_key=PINECONE_API_KEY)
     #st.write("Pinecone initialized successfully.")
 except Exception as e:
     st.error(f"Error initializing Pinecone: {e}")
