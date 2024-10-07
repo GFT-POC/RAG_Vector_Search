@@ -32,8 +32,8 @@ except Exception as e:
     st.stop()
 
 # Load embedding model for RAG
-embedding_model = AutoModel.from_pretrained('jinaai/jina-embeddings-v2-base-en', trust_remote_code=True)
-tokenizer = AutoTokenizer.from_pretrained('jinaai/jina-embeddings-v2-base-en')
+embedding_model = AutoModel.from_pretrained('bert-base-uncased') #AutoModel.from_pretrained('jinaai/jina-embeddings-v2-base-en', trust_remote_code=True)
+tokenizer = AutoTokenizer.from_pretrained('bert-base-uncased') #AutoTokenizer.from_pretrained('jinaai/jina-embeddings-v2-base-en')
 
 # Title and Short Description
 st.title("Intelligent Document Search App")
